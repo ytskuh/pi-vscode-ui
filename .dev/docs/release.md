@@ -8,7 +8,7 @@ scope:
   - /apps/vscode/package.json
   - /apps/desktop/**
   - /packages/pi-rpc/package.json
-updated: 2026-11-03
+updated: 2026-11-12
 ---
 
 # Release Procedure
@@ -44,6 +44,10 @@ Stable publication requires the `marketplace-publish` GitHub environment:
 - `OVSX_PAT` with access to the Open VSX namespace.
 
 Missing configuration or failed publication fails the release. Never put tokens in Git, packages, logs or chat. Check registry pages and installation from VS Code/VSCodium after publication.
+
+### Fork-only VSIX releases
+
+For a GitHub-only release in a personal fork, use `fork-v<version>` tags. These do not match either product's `v*` publishing workflow. Keep the product version under the same authority and run the extension checks, packaging and verification above; shared changes also need `pnpm check`. Use the tested source commit for the tag and upload that exact VSIX with its SHA-256 checksum to the fork's GitHub Release. Pass the fork explicitly with `gh release create --repo <owner>/pi-vscode-ui --verify-tag --notes-file <notes-file>` and the existing tag/assets. State the fork identity and verification limits in the notes. This route publishes neither to Marketplace/Open VSX nor to the Desktop update channel.
 
 ## Desktop packaging (Windows x64)
 
