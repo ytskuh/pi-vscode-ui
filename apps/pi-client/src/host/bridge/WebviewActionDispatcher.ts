@@ -68,6 +68,8 @@ const SIDEBAR_COLLECTION_TARGET_ACTIONS = new Set<WebviewToHostMessage["type"]>(
   "activateSession",
   "closeSession",
   "renameSession",
+  // The session list opens any listed Session in a tab, also before one is displayed.
+  "openSessionPanel",
   "revealSessionPanel",
   "restartSession",
   "retryStart",
@@ -186,6 +188,8 @@ export class WebviewActionDispatcher {
         return;
       case "openSessionPanel":
         await this.#openPanel(message.sessionId, message.draft);
+        // A restored Session opened straight into a tab has not started yet.
+        await this.#registry.startIfStopped(message.sessionId).catch(() => undefined);
         return;
       case "revealSessionPanel":
         await this.#revealPanel(message.sessionId);
