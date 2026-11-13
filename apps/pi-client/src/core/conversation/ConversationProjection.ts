@@ -426,6 +426,7 @@ export class ConversationProjection {
           status,
           timestamp,
           (content, idPrefix) => this.#validatedBlocks(content, undefined, idPrefix),
+          (itemId) => this.#shownReasoningText(turn.id, itemId),
         ),
       });
       if (placement.kind === "conflict") throw new Error(`Persisted assistant placement conflict: ${placement.reason}`);
@@ -620,6 +621,7 @@ export class ConversationProjection {
         status,
         timestamp,
         (content, idPrefix) => this.#validatedBlocks(content, undefined, idPrefix),
+        (itemId) => this.#shownReasoningText(turn.id, itemId),
       ),
     });
     if (placement.kind !== "placed") return undefined;
@@ -1019,6 +1021,11 @@ export class ConversationProjection {
     this.#markContentChanged();
   }
 
+  #shownReasoningText(turnId: string, itemId: string): string | undefined {
+    const item = this.#store.turnItem(turnId, itemId);
+    return item?.type === "reasoning" && item.text.trim() ? item.text : undefined;
+  }
+
   #validatedBlocks(content: unknown, attachments: unknown, idPrefix: string): MessageBlockView[] {
     const blocks = contentToBlocks(content, attachments, idPrefix);
     const images = blocks.flatMap((block) => block.type === "images" ? block.images : []);
@@ -1085,18 +1092,23 @@ function assistantActivities(
   status: MessageStatus,
   timestamp: number,
   blocksFromContent: (content: unknown, idPrefix: string) => MessageBlockView[],
+  shownReasoningText: (itemId: string) => string | undefined,
 ): AgentActivityView[] {
   const activities: AgentActivityView[] = [];
   for (const [index, part] of parts.entries()) {
     if (part.type === "thinking") {
+      const id = `${messageId}:reasoning:${part.contentIndex}`;
+      // Pi can end a streamed summary with blank text: its Responses adapter replaces the summary
+      // with the final reasoning item's, which some gateways send with empty parts. Keep what was shown.
+      const text = part.text.trim() ? part.text : shownReasoningText(id) ?? part.text;
       // A model that keeps its reasoning private (OpenAI without a summary, for one) still sends
       // an empty block. It says "Thinking" while it is the newest part; once the model moves on
       // there is nothing to read, so, as in Pi's terminal, it is not shown.
-      if (!part.text.trim() && (status !== "streaming" || index < parts.length - 1)) continue;
+      if (!text.trim() && (status !== "streaming" || index < parts.length - 1)) continue;
       activities.push({
-        id: `${messageId}:reasoning:${part.contentIndex}`,
+        id,
         type: "reasoning",
-        text: part.text,
+        text,
         status,
         timestamp,
       });

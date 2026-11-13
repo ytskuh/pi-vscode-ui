@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.3] - 2026-11-13
+
+### Fixed
+
+- A reasoning summary no longer goes blank when thinking ends. Behind some gateways, Pi replaces the streamed summary with an empty one at the end. FrostPi now keeps what it showed. Pi still saves the empty summary, so a reopened session cannot show it.
+
 ## [0.17.2] - 2026-11-13
 
 ### Fixed
