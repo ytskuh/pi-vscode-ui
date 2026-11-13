@@ -22,6 +22,7 @@ The Host emits one ordered `conversationItems` collection. A visual turn has its
 
 - A user `message` opens a visual turn and supplies its stable `sourceEntryId`.
 - Assistant content becomes reasoning, response, and tool activities in protocol order. The persisted assistant identity is the session entry ID; a Pi message ID or timestamp is only a live-to-persisted correlation clue and never merges two persisted entries.
+- Reasoning with blank text is not shown once a later part of its message exists or the message ends; while it is the newest part of a streaming message it shows that the model is thinking. When a later, higher-authority version of a reasoning part has blank text but the same activity already shows text, the shown text stays: Pi can end a streamed summary blank when a gateway's final reasoning item has empty parts.
 - A tool result updates the activity identified by `toolCallId`; it is not a second visible activity. Assistant takeover relocates all reasoning, response, and embedded tool-call parts as one ownership unit, including the tool location.
 - `compaction`, `branch_summary`, and `custom_message` are independent items at their active-path positions.
 - Compaction never removes or hides earlier active-path items. Nested `retainedTail` values are LLM-context metadata and are not expanded into transcript items.

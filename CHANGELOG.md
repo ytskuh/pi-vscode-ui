@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Opening a session in an editor tab from the session list failed with "The Webview action does not target the Session displayed by this surface" until that session had been shown in the sidebar. A restored session opened this way now also starts and loads its history.
+- A reasoning summary no longer goes blank when thinking ends. Behind some gateways, Pi replaces the streamed summary with an empty one at the end. FrostPi now keeps what it showed. Pi still saves the empty summary, so a reopened session cannot show it.
 - Reasoning a model keeps private no longer leaves an empty **Reasoning** row. OpenAI models, for example, often reason without a summary. The row says **Thinking** while the model reasons and goes away once it moves on, as in Pi's terminal.
 - A model set in `frostpi.pi.arguments` (`--model`, `--provider`, `--thinking`) applies to new conversations only. Pi used to apply it to every resumed session too, replacing the model that session was using.
 
