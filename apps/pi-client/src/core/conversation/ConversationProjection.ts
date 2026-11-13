@@ -1087,8 +1087,12 @@ function assistantActivities(
   blocksFromContent: (content: unknown, idPrefix: string) => MessageBlockView[],
 ): AgentActivityView[] {
   const activities: AgentActivityView[] = [];
-  for (const part of parts) {
+  for (const [index, part] of parts.entries()) {
     if (part.type === "thinking") {
+      // A model that keeps its reasoning private (OpenAI without a summary, for one) still sends
+      // an empty block. It says "Thinking" while it is the newest part; once the model moves on
+      // there is nothing to read, so, as in Pi's terminal, it is not shown.
+      if (!part.text.trim() && (status !== "streaming" || index < parts.length - 1)) continue;
       activities.push({
         id: `${messageId}:reasoning:${part.contentIndex}`,
         type: "reasoning",

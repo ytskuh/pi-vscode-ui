@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-11-13
+
+### Fixed
+
+- Reasoning a model keeps private no longer leaves an empty **Reasoning** row. OpenAI models, for example, often reason without a summary. The row says **Thinking** while the model reasons and goes away once it moves on, as in Pi's terminal.
+
 ## [0.17.1] - 2026-11-13
 
 ### Added

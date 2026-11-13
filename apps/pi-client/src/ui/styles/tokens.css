@@ -154,6 +154,7 @@
   text-align: left;
 }
 .activity-trigger:hover { color: var(--frost-text); }
+.activity-trigger:disabled { cursor: default; }
 /* The glyph's size and display come from codicon's own `.codicon[class*=codicon-]` rule, which
    outranks this selector: a `font-size` or `display` declared here is silently ignored. This
    class only reserves the column the row lays its icon out in. */
