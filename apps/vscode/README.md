@@ -149,7 +149,7 @@ For best workspace and session discovery, install `fd` and `rg` on the Extension
 
 ### Session tabs
 
-A session can live in an editor tab instead of the sidebar. **FrostPi: New Session in Editor Tab** starts one there directly; the `+` button in a session tab, or in the editor title bar, opens another in the same tab group and working directory. Click a session tab's title to rename it, also while Pi is working, or run **FrostPi: Rename Session**. The sidebar keeps its own selection throughout.
+A session can live in an editor tab instead of the sidebar. **FrostPi: New Session in Editor Tab** starts one there directly; the `+` button in a session tab, or in the editor title bar, opens another in the same tab group and working directory. Click a session tab's title to rename it, also while Pi is working, or run **FrostPi: Rename Session**. In the sidebar, use the pencil button next to the session title or double-click the title. The sidebar keeps its own selection throughout.
 
 ### Conversation commands
 
@@ -157,18 +157,20 @@ FrostPi answers a few slash commands itself. They never become a prompt, and the
 
 - `/compact [instructions]` runs Pi's own context compaction.
 - `/clear` starts a new conversation in the same session view. The model, thinking level and Pi process stay. The earlier conversation remains in Pi's session history, so **Resume session** can reopen it. Stop a running response first.
+- `/name <name>` or `/alias <name>` renames the session. Without a name, FrostPi asks for one.
+- `/reload` reloads Pi's extensions, skills, prompt templates, themes and context files without restarting the session. Stop a running response first.
 - `/rewind` lists your earlier prompts, returns the conversation to just before the one you pick, and puts that prompt back in the Composer for editing. It is **Branch here** with a picker: the path you left stays available through **Switch branch**. Files on disk are not restored; only the conversation changes.
 - `/btw <question>` asks a side question about the conversation without adding it to the conversation. The answer appears in a card above the Composer and is never saved. It works while Pi is running a turn, uses the current model and counts as one more model request, and cannot use tools.
   - The request is made inside Pi through its model API for extensions, with Pi's model, credentials and provider settings. It follows Pi's `images.blockImages` setting.
   - It is not an agent turn. Other Pi extensions' `context`, `before_provider_request` and `before_provider_headers` hooks do not run for it. If you rely on such an extension to redact context or to add gateway headers, do not use `/btw`.
 
-`/clear`, `/rewind` and `/btw` need Pi. With the `oh-my-pi` compatibility profile FrostPi does not offer them and passes such text to the runtime unchanged.
+`/clear`, `/rewind`, `/reload` and `/btw` need Pi. With the `oh-my-pi` compatibility profile FrostPi does not offer them and passes such text to the runtime unchanged.
 
 ### Focus view
 
-The focus view keeps long turns readable. Each run of tool calls and reasoning folds into one row that says what it did, or what it is doing right now, and replies stay visible in order. Click a row to see its steps. When a turn finishes it collapses further into the single **Worked** summary above the final answer.
+The focus view keeps long turns readable. Each run of tool calls and reasoning folds into one row that says what it did, or what it is doing right now, and replies stay visible in order. Click a row to see its steps. A reasoning row shows a line of what the model is thinking, as a tool row shows its target. A finished turn keeps the same shape: each run of steps stays folded and every reply, including those between runs, stays visible.
 
-The focus view is on by default. Run **FrostPi: Toggle Focus View** or set `frostpi.conversation.focusView` to switch; `frostpi.conversation.collapseTurnTrace` controls the completed-turn summary separately.
+The focus view is on by default. Run **FrostPi: Toggle Focus View** or set `frostpi.conversation.focusView` to switch it for running turns; `frostpi.conversation.collapseTurnTrace` folds finished turns the same way and is also on by default.
 
 ### Pi Session Tree and Fork
 
@@ -237,6 +239,7 @@ FrostPi also provides context metrics, diagnostics export, strict LF-delimited J
 - `frostpi.pi.runtimeCompatibility` — choose the limited Pi or Oh My Pi compatibility contract; this does not enable all runtime-specific OMP features.
 - `frostpi.pi.arguments`
 - `frostpi.session.startOnOpen`
+- `frostpi.session.closeWithEditorTab` — closing a session's editor tab also closes the session, as **Close session** in the list does. Off by default, so the session keeps running in the sidebar.
 - `frostpi.composer.streamingBehavior`
 - `frostpi.conversation.focusView`
 - `frostpi.conversation.collapseTurnTrace`

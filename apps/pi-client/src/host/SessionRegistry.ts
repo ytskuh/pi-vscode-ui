@@ -362,6 +362,16 @@ export class SessionRegistry {
     if (runtime.view.status === "stopped" && !runtime.isEphemeral) await this.#startRuntime(runtime);
   }
 
+  /**
+   * Starts a restored Session that a presentation is about to show, as selecting it in
+   * the sidebar does, so its history loads without a prompt first. Failures are
+   * reported by the start itself.
+   */
+  async startIfStopped(sessionId: string): Promise<void> {
+    const runtime = this.#requireRuntime(sessionId);
+    if (runtime.view.status === "stopped" && !runtime.isEphemeral) await this.#startRuntime(runtime);
+  }
+
   /** Clear the foreground without closing, discarding or starting any Runtime. */
   async clearActiveSession(): Promise<void> {
     this.#assertOpen();
@@ -443,6 +453,13 @@ export class SessionRegistry {
         case "rewind":
           // The chosen prompt returns as a Composer seed, which must outlive this submission.
           await this.rewind(sessionId);
+          return;
+        case "reload":
+          await this.#withTreeInteraction(sessionId, () => runtime.reloadResources());
+          return;
+        case "name":
+        case "alias":
+          await this.#renameFromCommand(sessionId, hostCommand.argument);
           return;
         case "btw":
           await runtime.askSideQuestion(hostCommand.argument);
@@ -554,6 +571,9 @@ export class SessionRegistry {
     await access(original.sessionFile).catch(() => {
       throw new Error("Wait for Pi to finish saving this session before forking.");
     });
+    if (forkNeedsOwnProcess(runtime)) {
+      return this.#withSessionCreation(() => this.#forkInNewProcess(runtime, original, original.sessionFile!, entryId, resultSelection));
+    }
     const operation: ForkOperation = {
       phase: "waiting-for-pi",
       sourceId: sessionId,
@@ -615,6 +635,58 @@ export class SessionRegistry {
     return { cancelled: false, forkSessionId: operation.forkId };
   }
 
+  /**
+   * Fork while the source is busy. Pi's fork replaces the conversation of the process
+   * that runs it, which would end the running reply, so a second Pi process opens the
+   * same session file and forks there. The source process is never touched. The new
+   * entry stays unsaved until Pi has written the Fork's own file, so an interrupted
+   * Fork never leaves a second entry pointing at the source's file.
+   */
+  async #forkInNewProcess(
+    source: SessionRuntime,
+    original: PersistedSessionRecord,
+    sourceFile: string,
+    entryId: string,
+    resultSelection: ForkResultSelection,
+  ): Promise<{ cancelled: boolean; forkSessionId?: string }> {
+    const forkId = randomUUID();
+    const forkName = forkSessionName(source.view.title);
+    const record: PersistedSessionRecord = { id: forkId, title: forkName, cwd: original.cwd, sessionFile: sourceFile, updatedAt: Date.now() };
+    this.#records.set(forkId, record);
+    this.#temporarySessionIds.add(forkId);
+    const runtime = this.#createRuntime(record);
+    this.#runtimes.set(forkId, runtime);
+    let committed = false;
+    try {
+      await this.#startRuntime(runtime, true);
+      if (runtime.view.status !== "ready") throw new Error(runtime.view.error ?? "The Pi process for the Fork did not start.");
+      // The start queues the ordinary history load; a deferred one is then forced.
+      for (let attempt = 0; attempt < 2 && runtime.view.historyStatus !== "loaded"; attempt += 1) await this.#queueHistory(runtime, true);
+      const result = await runtime.executeFork(entryId);
+      if (result.cancelled) return { cancelled: true };
+      committed = true;
+      await runtime.reconcileFork(forkName, { id: forkId, text: result.text, images: result.images });
+      const forkFile = runtime.view.sessionFile;
+      if (!forkFile || samePath(forkFile, sourceFile)) throw new Error("Pi did not create a separate file for the Fork.");
+      this.#records.set(forkId, { ...record, sessionFile: forkFile, updatedAt: Date.now() });
+      this.#temporarySessionIds.delete(forkId);
+      if (resultSelection === "select-result") this.#activeSessionId = forkId;
+      await Promise.resolve(this.#persist()).catch((error: unknown) => this.#logger.error("Failed to persist session collection after Fork", error));
+      this.#emitChange();
+      return { cancelled: false, forkSessionId: forkId };
+    } finally {
+      // Nothing of a failed or cancelled Fork stays, and a committed Fork that could not
+      // be reconciled is reported rather than shown half-loaded.
+      if (this.#records.get(forkId)?.sessionFile === sourceFile || !committed) {
+        if (this.#runtimes.get(forkId) === runtime) {
+          await runtime.dispose().catch(() => undefined);
+          this.#removeSession(forkId);
+          this.#emitChange();
+        }
+      }
+    }
+  }
+
   async branchHere(sessionId: string, entryId: string, hasDraft: boolean): Promise<{ cancelled: boolean }> {
     return this.#withTreeInteraction(sessionId, async () => {
       this.#assertNoForkOperation();
@@ -647,6 +719,21 @@ export class SessionRegistry {
       if (result.seed) runtime.setComposerSeed(result.seed);
       return { cancelled: result.cancelled };
     });
+  }
+
+  /** `/name` and `/alias`: with a name, rename at once; without one, ask for it. */
+  async #renameFromCommand(sessionId: string, argument: string): Promise<void> {
+    const current = this.#requireRuntime(sessionId).view.title;
+    const name = argument || await this.#host.window.showInputBox({
+      title: "Rename FrostPi session",
+      value: current,
+      prompt: "The name is shown in the session list and the editor tab.",
+      validateInput: (value) => value.trim().length > MAX_SESSION_NAME_LENGTH ? `A session name can have at most ${MAX_SESSION_NAME_LENGTH} characters.` : undefined,
+    });
+    const normalized = name?.trim();
+    if (!normalized || normalized === current) return;
+    if (normalized.length > MAX_SESSION_NAME_LENGTH) throw new Error(`A session name can have at most ${MAX_SESSION_NAME_LENGTH} characters.`);
+    await this.rename(sessionId, normalized);
   }
 
   async rename(sessionId: string, name: string): Promise<void> {
@@ -1196,6 +1283,16 @@ export class SessionRegistry {
   #isOpenWorkspaceFolder(cwd: string): boolean {
     return this.#host.workspace.getWorkspaceFolders().some((folder) => sameCanonicalPath(folder.uri.fsPath, cwd));
   }
+}
+
+/** The bridge's bound on a session name; Pi itself accepts longer ones. */
+const MAX_SESSION_NAME_LENGTH = 160;
+
+/** The source cannot hand its own process to the Fork while it is busy. */
+function forkNeedsOwnProcess(runtime: SessionRuntime): boolean {
+  const view = runtime.view;
+  return view.isStreaming || view.status === "running" || view.pendingExtensionUi.length > 0
+    || view.queuedSteers.length > 0 || view.queuedFollowUps.length > 0;
 }
 
 function forkSessionName(title: string): string {
