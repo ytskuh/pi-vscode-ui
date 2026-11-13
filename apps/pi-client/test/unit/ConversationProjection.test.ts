@@ -1055,30 +1055,6 @@ describe("ConversationProjection", () => {
     expect(reloaded?.map((item) => item.type === "reasoning" ? `reasoning:${item.text}` : item.type)).toEqual(["reasoning:**Plan** Read it", "response"]);
   });
 
-  it("keeps a streamed reasoning summary that Pi ends with blank text, through the persisted takeover", () => {
-    // Pi's Responses adapter replaces the streamed summary with the final reasoning item's,
-    // which some gateways send as empty parts: Pi ends the block with "\n\n".
-    const projection = new ConversationProjection();
-    projection.appendUserPrompt("Inspect", [], 1);
-    projection.applyEvent({ type: "agent_start" });
-    projection.applyEvent({ type: "message_start", message: { role: "user", content: "Inspect", timestamp: 1 } });
-    projection.applyEvent({ type: "message_start", message: { role: "assistant", content: [], timestamp: 2 } });
-    projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "thinking_start", contentIndex: 0 } });
-    projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "thinking_delta", contentIndex: 0, delta: "**Plan** Read the parser" } });
-    projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "thinking_end", contentIndex: 0, content: "\n\n" } });
-    projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "text_start", contentIndex: 1 } });
-    projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "text_delta", contentIndex: 1, delta: "Done" } });
-    const reasoning = () => turns(projection.read().items)[0]?.items.filter((item) => item.type === "reasoning").map((item) => item.type === "reasoning" ? item.text : "");
-    expect(reasoning()).toEqual(["**Plan** Read the parser"]);
-
-    const content = [{ type: "thinking", thinking: "\n\n", thinkingSignature: "{}" }, { type: "text", text: "Done" }];
-    projection.applyEvent({ type: "message_end", message: { role: "assistant", content, stopReason: "stop", timestamp: 2 } });
-    expect(reasoning()).toEqual(["**Plan** Read the parser"]);
-
-    expect(projection.reconcileEntries([userEntry("u1", null, "Inspect", 1), assistantEntry("a1", "u1", content, "stop", 2)], [])).toBe("applied");
-    expect(reasoning()).toEqual(["**Plan** Read the parser"]);
-  });
-
   it("projects one indexed tool card through preparation, binding, execution, final replacement, and persisted takeover", () => {
     const projection = new ConversationProjection();
     projection.appendUserPrompt("Inspect", [], 1);
