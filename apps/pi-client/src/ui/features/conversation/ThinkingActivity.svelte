@@ -7,15 +7,17 @@
 
   let { activity, open = $bindable(false) }: { activity: ReasoningActivityView; open?: boolean } = $props();
   const preview = $derived(reasoningPreview(activity.text, activity.status === "streaming"));
+  // A model that keeps its reasoning private sends nothing to expand.
+  const empty = $derived(!activity.text.trim());
 </script>
 
 <Collapsible.Root bind:open class="activity-row reasoning-activity">
-  <Collapsible.Trigger class="activity-trigger reasoning-trigger">
+  <Collapsible.Trigger class="activity-trigger reasoning-trigger" disabled={empty}>
     <span class="codicon codicon-lightbulb activity-leading" aria-hidden="true"></span>
     <span class="activity-title">{activity.status === "streaming" ? "Thinking" : "Reasoning"}</span>
     {#if preview && !open}<span class="reasoning-preview" title={preview}>{preview}</span>{/if}
     {#if activity.status === "streaming"}<span class="thinking-pulse"></span>{/if}
-    <span class={`codicon codicon-chevron-${open ? "down" : "right"} activity-chevron`} aria-hidden="true"></span>
+    {#if !empty}<span class={`codicon codicon-chevron-${open ? "down" : "right"} activity-chevron`} aria-hidden="true"></span>{/if}
   </Collapsible.Trigger>
   <Collapsible.Content class="activity-content reasoning-content">
     <MarkdownContent content={activity.text} />

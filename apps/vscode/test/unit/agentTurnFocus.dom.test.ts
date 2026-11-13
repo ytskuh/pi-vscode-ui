@@ -83,4 +83,12 @@ describe("focus view", () => {
 
     expect(view.container.querySelector(".reasoning-content")?.textContent).toContain("Read the parser first");
   });
+
+  it("shows private reasoning as Thinking with nothing to expand", () => {
+    const thinking: AgentTurnItemView = { id: "think", type: "reasoning", text: "", status: "streaming", timestamp: 0 };
+    const view = render(AgentTurn, { turn: turn([thinking]), session: session(false) });
+    const trigger = view.getByRole("button", { name: /Thinking/ }) as HTMLButtonElement;
+    expect(trigger.disabled).toBe(true);
+    expect(view.container.querySelector(".activity-chevron")).toBeNull();
+  });
 });
