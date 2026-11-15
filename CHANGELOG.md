@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.4] - 2026-11-14
+
+### Fixed
+
+- `@` file mentions find files whose name contains what you type, also in large workspaces. The fuzzy search used to stop at its first 500 matches, which could all be unrelated paths, so typing part of a file's name could miss it.
+
 ## [0.17.2] - 2026-11-13
 
 ### Fixed
