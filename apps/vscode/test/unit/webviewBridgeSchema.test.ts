@@ -89,6 +89,8 @@ describe("Webview bridge validation", () => {
 
   it("accepts the Session Tab creation and side-question dismissal actions with bounded ids", () => {
     expect(webviewToHostSchema.safeParse({ bridgeVersion: BRIDGE_VERSION, type: "createSessionPanel" }).success).toBe(true);
+    expect(webviewToHostSchema.safeParse({ bridgeVersion: BRIDGE_VERSION, type: "createSessionPanel", ephemeral: true }).success).toBe(true);
+    expect(webviewToHostSchema.safeParse({ bridgeVersion: BRIDGE_VERSION, type: "createSessionPanel", ephemeral: "true" }).success).toBe(false);
     const dismissal = { bridgeVersion: BRIDGE_VERSION, type: "dismissSideQuestion", sessionId: "session-1", questionId: "side-question-1" };
     expect(webviewToHostSchema.safeParse(dismissal).success).toBe(true);
     expect(webviewToHostSchema.safeParse({ ...dismissal, questionId: "" }).success).toBe(false);

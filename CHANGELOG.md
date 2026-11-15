@@ -6,8 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The page shown when no session is open offers **Temporary session**, a conversation that is never saved, next to **New session** and **Resume session**.
+- A temporary session can start directly in an editor tab: from the sidebar's `+` menu under more ways to start, from the new crossed-eye button in a session tab, by holding Alt while clicking the `+` in the editor title bar, from that title bar's `…` menu, or with **FrostPi: New Temporary Session in Editor Tab**. **FrostPi: New Temporary Session** starts one in the sidebar.
+
 ### Changed
 
+- In the sidebar's `+` menu, **New session in editor tab** sits directly below **New session** instead of behind the arrow for more ways to start.
 - Includes upstream FrostPi 0.16.6, listed under that version below. In VS Code that adds the link target preview and one **Reasoning** entry for adjacent thinking blocks.
 - Blank reasoning blocks are now skipped by upstream's fix from 0.16.6, which replaces this fork's own from 0.17.2. One difference: reasoning a model keeps private no longer shows a **Thinking** row while the model reasons. The running turn's timer still shows that it is working.
 

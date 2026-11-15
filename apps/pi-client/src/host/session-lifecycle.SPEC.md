@@ -5,7 +5,7 @@ scope:
   - /apps/pi-client/src/core/sessions/**
   - /apps/pi-client/src/host/**
   - /apps/vscode/src/extension/webview-host/**
-updated: 2026-11-12
+updated: 2026-11-14
 ---
 
 # Pi Session Lifecycle
@@ -62,7 +62,7 @@ Cancel Fork stops that child and restarts the original so a late response cannot
 
 **A side question is transient Runtime state.** `/btw` asks Pi's current model about the conversation Pi already holds, through the bundled side-question adapter and with Pi's own credentials. The adapter uses Pi's model API for extensions, not the agent loop: it applies Pi's `images.blockImages` setting itself, treating a Pi that cannot report settings as blocking, and other extensions' agent-request hooks do not run. An answer the model cut at its output limit, or gave beside a tool call it cannot make here, is shown and marked as possibly partial. Nothing is appended to the session, so it is not a turn: it never promotes a Provisional Session, never enters a streaming queue, does not wait for or interrupt an agent turn, and issues no completion notification. Admission returns as soon as the question is shown; the answer arrives later through the view. A Session holds one question; asking again replaces it, and an answer for a dismissed or replaced question is dropped. Stopping the process fails a pending question. Clearing the conversation removes the card with the conversation it was about, and an answer that still arrives is dropped. The exchange is not persisted and does not survive the Extension Host.
 
-**A Session created for its own presentation leaves the sidebar alone.** New-in-tab preserves the sidebar selection and does not discard the sidebar's unretained Provisional Session; with nothing selected, the new Session becomes the selection so the collection stays reachable. Asked from an existing Session, it reuses that Session's working directory only while discovery still allows the directory, and otherwise falls back to the ordinary Host choice. The presentation is told about the entry before its child starts; if the presentation cannot open, the Session still starts and the failure is reported.
+**A Session created for its own presentation leaves the sidebar alone.** New-in-tab preserves the sidebar selection and does not discard the sidebar's unretained Provisional Session; with nothing selected, the new Session becomes the selection so the collection stays reachable. Asked from an existing Session, it reuses that Session's working directory only while discovery still allows the directory, and otherwise falls back to the ordinary Host choice. The presentation is told about the entry before its child starts; if the presentation cannot open, the Session still starts and the failure is reported. Such a Session may be Ephemeral: that sets what Pi saves and never where the Session is presented.
 
 ## Retention, restoration and shutdown
 
