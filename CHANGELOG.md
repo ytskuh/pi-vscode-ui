@@ -8,11 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Stop a session without closing it: its Pi process ends and it stays in the list, ready to start again when you select it, send a prompt or choose **Start session**. Use the stop button on its row in the session list, **Stop session** in the `…` menu, or **FrostPi: Stop Session**, which is also in a session tab's title bar menu.
+- Delete a session: **Delete session** stops it and removes its Pi session file, to the trash where possible, after confirmation. It is in the same places, with a trash icon in the session list, and as **FrostPi: Delete Session**. Forks of the session keep their own files.
+
 - The page shown when no session is open offers **Temporary session**, a conversation that is never saved, next to **New session** and **Resume session**.
 - A temporary session can start directly in an editor tab: from the crossed-eye button beside **New session in editor tab** in the sidebar's `+` menu, from the new crossed-eye button in a session tab, by holding Alt while clicking the `+` in the editor title bar, from that title bar's `…` menu, or with **FrostPi: New Temporary Session in Editor Tab**. **FrostPi: New Temporary Session** starts one in the sidebar.
 
+### Fixed
+
+- A prompt sent to a session that had stopped or failed could be refused with "Wait for conversation history to finish loading" while FrostPi started it again. The prompt now waits for the history and is sent.
+
 ### Changed
 
+- **FrostPi: Stop Active Session** is now called **FrostPi: Stop Response**. It stops the running reply, as before; **FrostPi: Stop Session** is the new command that ends the Pi process.
 - The sidebar's `+` menu is one flat list: **New session**, **New session in editor tab**, **New session with arguments…** and **Resume session**. The two new-session entries each end in a crossed-eye button that starts the temporary variant. The arrow that expanded more ways to start is gone.
 - The badge beside a temporary session's title reads **Temporary**. It was in Chinese (临时).
 - Includes upstream FrostPi 0.16.6, listed under that version below. In VS Code that adds the link target preview and one **Reasoning** entry for adjacent thinking blocks.

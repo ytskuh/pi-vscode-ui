@@ -91,6 +91,10 @@ describe("Webview bridge validation", () => {
     expect(webviewToHostSchema.safeParse({ bridgeVersion: BRIDGE_VERSION, type: "createSessionPanel" }).success).toBe(true);
     expect(webviewToHostSchema.safeParse({ bridgeVersion: BRIDGE_VERSION, type: "createSessionPanel", ephemeral: true }).success).toBe(true);
     expect(webviewToHostSchema.safeParse({ bridgeVersion: BRIDGE_VERSION, type: "createSessionPanel", ephemeral: "true" }).success).toBe(false);
+    for (const type of ["stopSession", "deleteSession"]) {
+      expect(webviewToHostSchema.safeParse({ bridgeVersion: BRIDGE_VERSION, type, sessionId: "session-1" }).success).toBe(true);
+      expect(webviewToHostSchema.safeParse({ bridgeVersion: BRIDGE_VERSION, type }).success).toBe(false);
+    }
     const dismissal = { bridgeVersion: BRIDGE_VERSION, type: "dismissSideQuestion", sessionId: "session-1", questionId: "side-question-1" };
     expect(webviewToHostSchema.safeParse(dismissal).success).toBe(true);
     expect(webviewToHostSchema.safeParse({ ...dismissal, questionId: "" }).success).toBe(false);
