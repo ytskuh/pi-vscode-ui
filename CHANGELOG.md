@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - In the sidebar's `+` menu, **New session in editor tab** sits directly below **New session** instead of behind the arrow for more ways to start.
+- The badge beside a temporary session's title reads **Temporary**. It was in Chinese (临时).
 - Includes upstream FrostPi 0.16.6, listed under that version below. In VS Code that adds the link target preview and one **Reasoning** entry for adjacent thinking blocks.
 - Blank reasoning blocks are now skipped by upstream's fix from 0.16.6, which replaces this fork's own from 0.17.2. One difference: reasoning a model keeps private no longer shows a **Thinking** row while the model reasons. The running turn's timer still shows that it is working.
 
