@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stop a session without closing it: its Pi process ends and it stays in the list, ready to start again when you select it, send a prompt or choose **Start session**. Use the stop button on its row in the session list, **Stop session** in the `…` menu, or **FrostPi: Stop Session**, which is also in a session tab's title bar menu.
 - Delete a session: **Delete session** stops it and removes its Pi session file, to the trash where possible, after confirmation. It is in the same places, with a trash icon in the session list, and as **FrostPi: Delete Session**. Forks of the session keep their own files.
 
+- Right-click a link in a message to copy it: **Copy Link Address** for a web link, **Copy Path** for a file link, which copies the full path with its line. VS Code's own **Copy** only copies selected text, so it copied nothing from a link.
+
 - The page shown when no session is open offers **Temporary session**, a conversation that is never saved, next to **New session** and **Resume session**.
 - A temporary session can start directly in an editor tab: from the crossed-eye button beside **New session in editor tab** in the sidebar's `+` menu, from the new crossed-eye button in a session tab, by holding Alt while clicking the `+` in the editor title bar, from that title bar's `…` menu, or with **FrostPi: New Temporary Session in Editor Tab**. **FrostPi: New Temporary Session** starts one in the sidebar.
 
