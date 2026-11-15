@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Clicking a web link in a message opened it in the browser and then also showed VS Code's dialog asking whether to open, copy or cancel it. The link now just opens.
 - A prompt sent to a session that had stopped or failed could be refused with "Wait for conversation history to finish loading" while FrostPi started it again. The prompt now waits for the history and is sent.
 
 ### Changed
