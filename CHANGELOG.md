@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Includes upstream FrostPi 0.16.6, listed under that version below. In VS Code that adds the link target preview and one **Reasoning** entry for adjacent thinking blocks.
+- Blank reasoning blocks are now skipped by upstream's fix from 0.16.6, which replaces this fork's own from 0.17.2. One difference: reasoning a model keeps private no longer shows a **Thinking** row while the model reasons. The running turn's timer still shows that it is working.
+
 ## [0.17.4] - 2026-11-14
 
 ### Fixed
@@ -61,6 +66,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep `/editor` drafts private on shared machines: the temporary draft now lives in its own owner-only directory instead of a world-readable file in the system temporary directory, and is removed together with it.
 - Leave Pi's stderr out of exported diagnostics. The export now states only how much was captured, since stderr can contain prompts or credentials in forms no redaction recognizes; the session's error display and the FrostPi output channel still show it. Redaction of the remaining text also covers JSON fields, headers, command-line flags, URL query secrets, private keys and common provider token formats.
 - On Windows, refuse Markdown image paths that name a network share or device (`\\server\share`, `file://server/…`), which were opened automatically and could send the user's Windows credentials to a server chosen by message content.
+
+## [0.16.6] - 2026-11-14
+
+### Added
+
+- Add a Desktop sidebar Sessions section across Projects, with waiting, failed, and running Sessions first. Sessions stay listed after a turn completes, and selecting one also selects its Project. Projects and Sessions fold independently, and their separator resizes the Sessions section.
+- Preview Markdown link targets after a one-second hover or immediately on keyboard focus. File references show their path resolved against the Session directory and their line/column details; external links show the full URL.
+
+### Fixed
+
+- Show one Reasoning entry for adjacent thinking blocks in the same assistant reply instead of repeated rows. Skip blank thinking blocks and preserve the original Markdown whitespace.
 
 ## [0.16.5] - 2026-11-08
 
@@ -623,7 +639,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add editor context capture, file navigation, Git-base diffs, diagnostics export, CSP, and trusted-workspace constraints.
 - Add production builds, tests, VSIX verification, release scripts, and maintenance documentation.
 
-[Unreleased]: https://github.com/frostime/pi-vscode-ui/compare/v0.16.5...HEAD
+[Unreleased]: https://github.com/frostime/pi-vscode-ui/compare/v0.16.6...HEAD
+[0.16.6]: https://github.com/frostime/pi-vscode-ui/compare/v0.16.5...v0.16.6
 [0.16.5]: https://github.com/frostime/pi-vscode-ui/compare/v0.16.4...v0.16.5
 [0.16.4]: https://github.com/frostime/pi-vscode-ui/compare/v0.16.3...v0.16.4
 [0.16.3]: https://github.com/frostime/pi-vscode-ui/compare/v0.16.2...v0.16.3

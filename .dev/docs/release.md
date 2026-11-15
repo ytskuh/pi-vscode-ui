@@ -47,7 +47,7 @@ Missing configuration or failed publication fails the release. Never put tokens 
 
 ### Fork-only VSIX releases
 
-For a GitHub-only release in a personal fork, use `fork-v<version>` tags. These do not match either product's `v*` publishing workflow. Keep the product version under the same authority and run the extension checks, packaging and verification above; shared changes also need `pnpm check`. Use the tested source commit for the tag and upload that exact VSIX with its SHA-256 checksum to the fork's GitHub Release. Pass the fork explicitly with `gh release create --repo <owner>/pi-vscode-ui --verify-tag --notes-file <notes-file>` and the existing tag/assets. State the fork identity and verification limits in the notes. This route publishes neither to Marketplace/Open VSX nor to the Desktop update channel.
+For a GitHub-only release in a personal fork, use `fork-v<version>` tags. These do not match either product's `v*` publishing workflow. Keep the product version under the same authority and run the extension checks, packaging and verification above; shared changes also need `pnpm check`. Use the tested source commit for the tag and upload that exact VSIX with its SHA-256 checksum to the fork's GitHub Release. Pass the fork explicitly with `gh release create --repo <owner>/pi-vscode-ui --verify-tag --notes-file <notes-file>` and the existing tag/assets. State the fork identity and verification limits in the notes. This route publishes neither to Marketplace/Open VSX nor to the Desktop update channel. Release from the fork's `main`, which carries the fork's changes on top of upstream `main`; bring upstream in by merging, never by rebasing, so published `fork-v*` tags stay in the branch's history.
 
 ## Desktop packaging (Windows x64)
 

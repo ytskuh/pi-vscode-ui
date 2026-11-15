@@ -1022,37 +1022,43 @@ describe("ConversationProjection", () => {
     expect(normalizePersistedProjection(projection)).toEqual(normalizePersistedProjection(replacement));
   });
 
-  it("drops an empty reasoning block once the model moves past it, live and from history", () => {
+  it("joins adjacent thinking blocks into one reasoning activity and drops empty ones", () => {
     const projection = new ConversationProjection();
-    projection.appendUserPrompt("Inspect", [], 1);
+    projection.replaceEntries([
+      userEntry("u1", null, "Explain the split", 1),
+      assistantEntry("a1", "u1", [
+        { type: "thinking", thinking: "First thought." },
+        { type: "thinking", thinking: "" },
+        { type: "thinking", thinking: "Second thought." },
+        { type: "text", text: "Answer" },
+        { type: "thinking", thinking: "After the answer." },
+        { type: "thinking", thinking: "   " },
+      ], "stop", 2),
+    ], []);
+
+    const [turn] = turns(projection.read().items);
+    const reasoning = turn?.items.flatMap((item) => item.type === "reasoning" ? [{ id: item.id, text: item.text }] : []);
+    expect(reasoning).toEqual([
+      { id: "assistant-a1:reasoning:0", text: "First thought.\n\nSecond thought." },
+      { id: "assistant-a1:reasoning:4", text: "After the answer." },
+    ]);
+  });
+
+  it("preserves Markdown whitespace while joining live thinking blocks", () => {
+    const projection = new ConversationProjection();
+    projection.appendUserPrompt("Explain", [], 1);
     projection.applyEvent({ type: "agent_start" });
-    projection.applyEvent({ type: "message_start", message: { role: "user", content: "Inspect", timestamp: 1 } });
     projection.applyEvent({ type: "message_start", message: { role: "assistant", content: [], timestamp: 2 } });
     projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "thinking_start", contentIndex: 0 } });
-    // The newest part is still the private reasoning: the row says the model is thinking.
-    expect(turns(projection.read().items)[0]?.items.map((item) => item.id)).toEqual(["assistant-2:reasoning:0"]);
+    projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "thinking_delta", contentIndex: 0, delta: "    code\n" } });
+    const first = turns(projection.read().items)[0]?.items[0];
+    expect(first).toMatchObject({ type: "reasoning", text: "    code\n" });
 
-    projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "thinking_end", contentIndex: 0, content: "" } });
     projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "thinking_start", contentIndex: 1 } });
-    projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "thinking_delta", contentIndex: 1, delta: "**Plan** Read it" } });
-    projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "text_start", contentIndex: 2 } });
-    projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "text_delta", contentIndex: 2, delta: "Done" } });
-    expect(turns(projection.read().items)[0]?.items.map((item) => item.id)).toEqual(["assistant-2:reasoning:1", "assistant-2:response:2"]);
-
-    const content = [
-      { type: "thinking", thinking: "", thinkingSignature: "{}" },
-      { type: "thinking", thinking: "**Plan** Read it" },
-      { type: "text", text: "Done" },
-      { type: "thinking", thinking: " \n" },
-    ];
-    projection.applyEvent({ type: "message_end", message: { role: "assistant", content, stopReason: "stop", timestamp: 2 } });
-    const live = turns(projection.read().items)[0]?.items.filter((item) => item.type !== "notice");
-    expect(live?.map((item) => item.type === "reasoning" ? `reasoning:${item.text}` : item.type)).toEqual(["reasoning:**Plan** Read it", "response"]);
-
-    const persisted = new ConversationProjection();
-    persisted.replaceEntries([userEntry("u1", null, "Inspect", 1), assistantEntry("a1", "u1", content, "stop", 2)], []);
-    const reloaded = turns(persisted.read().items)[0]?.items.filter((item) => item.type !== "notice");
-    expect(reloaded?.map((item) => item.type === "reasoning" ? `reasoning:${item.text}` : item.type)).toEqual(["reasoning:**Plan** Read it", "response"]);
+    projection.applyEvent({ type: "message_update", assistantMessageEvent: { type: "thinking_delta", contentIndex: 1, delta: "Next thought.\n" } });
+    const [turn] = turns(projection.read().items);
+    expect(turn?.items).toHaveLength(1);
+    expect(turn?.items[0]).toMatchObject({ id: first?.id, type: "reasoning", text: "    code\n\n\nNext thought.\n" });
   });
 
   it("projects one indexed tool card through preparation, binding, execution, final replacement, and persisted takeover", () => {
