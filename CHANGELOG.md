@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.6] - 2026-11-16
+
 ### Fixed
 
 - A turn in which an extension posted messages while Pi worked, such as a background process reporting that it finished, folded into many small step groups, one between each pair of messages. Such a message now folds into the group it arrived in, and the group's summary names it. A message that arrives outside a group, or beside a single step, still shows on its own.
