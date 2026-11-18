@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Session editor tabs come back after VS Code restarts, in the tab groups and order they had. A tab's session starts when the tab is first shown. A temporary session's tab does not come back, since nothing of that session was saved.
 - Fork the message you just sent while Pi is still replying to it. The fork keeps the conversation before that message and puts the message back in the new session's Composer, so the reply in progress is not part of it. Before, **Fork** appeared on that message only once the reply had finished.
 
 ## [0.17.6] - 2026-11-16
