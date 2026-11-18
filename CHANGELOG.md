@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Fork the message you just sent while Pi is still replying to it. The fork keeps the conversation before that message and puts the message back in the new session's Composer, so the reply in progress is not part of it. Before, **Fork** appeared on that message only once the reply had finished.
+
 ## [0.17.6] - 2026-11-16
 
 ### Fixed
