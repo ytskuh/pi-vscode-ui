@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Session editor tabs come back after VS Code restarts, in the tab groups and order they had. A tab's session starts when the tab is first shown. A temporary session's tab does not come back, since nothing of that session was saved.
 - Fork the message you just sent while Pi is still replying to it. The fork keeps the conversation before that message and puts the message back in the new session's Composer, so the reply in progress is not part of it. Before, **Fork** appeared on that message only once the reply had finished.
 
+### Changed
+
+- Includes upstream FrostPi 0.16.7, listed under that version below. It adds terminal-style cards for PowerShell tool calls, AVIF and BMP images in the conversation, and fixes for copying selected text with `Ctrl+C` and for hidden action buttons that caught clicks. Its security fixes are this fork's own from 0.17.0.
+
 ## [0.17.6] - 2026-11-16
 
 ### Fixed
@@ -96,6 +100,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep `/editor` drafts private on shared machines: the temporary draft now lives in its own owner-only directory instead of a world-readable file in the system temporary directory, and is removed together with it.
 - Leave Pi's stderr out of exported diagnostics. The export now states only how much was captured, since stderr can contain prompts or credentials in forms no redaction recognizes; the session's error display and the FrostPi output channel still show it. Redaction of the remaining text also covers JSON fields, headers, command-line flags, URL query secrets, private keys and common provider token formats.
 - On Windows, refuse Markdown image paths that name a network share or device (`\\server\share`, `file://server/…`), which were opened automatically and could send the user's Windows credentials to a server chosen by message content.
+
+## [0.16.7] - 2026-11-16
+
+### Fixed
+
+- Render PowerShell tool calls as shell commands: the collapsed card shows the terminal icon and the command itself instead of repeating the tool name.
+- Preserve selected transcript text when copying with `Ctrl+C` or the native Copy menu in VS Code and VSCodium versions that restore input focus before copying.
+- Prevent hidden code-block and message action buttons from intercepting clicks and text-selection drags.
+- Display AVIF and BMP conversation images from local files, inline data, and explicit HTTPS loads, alongside PNG, JPEG, WebP, GIF, and SVG. Prompt-attachment formats are unchanged.
+
+### Security
+
+- Update Mermaid to 11.16.1, markdown-it to 14.3.3, DOMPurify to 3.4.17 and KaTeX to 0.18.2 for rendering security fixes.
+- Block implicit remote image requests from rendered diagrams. Explicit `Load image` actions fetch HTTPS Markdown images through the Host and configured FrostPi proxy, with download time and size limits.
+- Store `/editor` drafts in a private temporary directory and clean it up when the draft is closed or the extension shuts down.
+- Omit Pi stderr content from FrostPi diagnostic exports and expand credential redaction in the remaining text. Session error displays remain available for local troubleshooting.
+- Block automatic Markdown image reads from Windows network shares other than the Session's own share, and reject device-namespace paths.
 
 ## [0.16.6] - 2026-11-14
 
@@ -669,7 +690,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add editor context capture, file navigation, Git-base diffs, diagnostics export, CSP, and trusted-workspace constraints.
 - Add production builds, tests, VSIX verification, release scripts, and maintenance documentation.
 
-[Unreleased]: https://github.com/frostime/pi-vscode-ui/compare/v0.16.6...HEAD
+[Unreleased]: https://github.com/frostime/pi-vscode-ui/compare/v0.16.7...HEAD
+[0.16.7]: https://github.com/frostime/pi-vscode-ui/compare/v0.16.6...v0.16.7
 [0.16.6]: https://github.com/frostime/pi-vscode-ui/compare/v0.16.5...v0.16.6
 [0.16.5]: https://github.com/frostime/pi-vscode-ui/compare/v0.16.4...v0.16.5
 [0.16.4]: https://github.com/frostime/pi-vscode-ui/compare/v0.16.3...v0.16.4
