@@ -250,7 +250,7 @@ describe("Pi session startup and conversation history", () => {
     }
   });
 
-  it("makes a resumed session ready before its history, and loads a large file without usable entries in full", async () => {
+  it("makes a resumed session ready before explicitly loading a large history", async () => {
     const dir = await mkdtemp(join(tmpdir(), "frostpi-runtime-"));
     const sessionFile = join(dir, "large.jsonl");
     await writeFile(sessionFile, Buffer.alloc(8 * 1024 * 1024 + 1));
@@ -335,12 +335,14 @@ process.on("SIGTERM", () => process.exit(0));
     expect(runtime.view.historyStatus).toBe("queued");
     expect(conversationTurns(runtime.view)).toHaveLength(0);
 
-    // The file has no entry to start a recent window at, so it loads in full, once.
-    const automaticLoad = runtime.loadHistory(false);
+    await runtime.loadHistory(false);
+    expect(runtime.view.historyStatus).toBe("deferred");
+    expect(conversationTurns(runtime.view)).toHaveLength(0);
+
+    const repeatedAutomaticLoad = runtime.loadHistory(false);
     const explicitLoad = runtime.loadHistory(true);
-    await Promise.all([automaticLoad, explicitLoad]);
+    await Promise.all([repeatedAutomaticLoad, explicitLoad]);
     expect(runtime.view.historyStatus).toBe("loaded");
-    expect(runtime.view.partialHistory).toBeUndefined();
     expect(conversationTurns(runtime.view)).toHaveLength(1);
     expect(conversationTurns(runtime.view).flatMap((turn) => turn.items).filter((item) => item.type === "response")).toEqual([
       expect.objectContaining({ type: "response", blocks: [{ type: "text", text: "Live response" }] }),
@@ -853,14 +855,14 @@ process.on("SIGTERM", () => process.exit(0));
     const launch = JSON.parse(await readFile(launchRecord, "utf8")) as { artifactPath: string; resultDirectory: string; hasToken: boolean };
     expect(launch).toMatchObject({ artifactPath, hasToken: true });
     // The private adapter command is hidden; the Host commands this runtime supports are listed.
-    expect(runtime.view.commands.map((command) => command.name)).toEqual(["clear", "rewind", "reload", "name", "alias", "visible"]);
+    expect(runtime.view.commands.map((command) => command.name)).toEqual(["clear", "reload", "name", "alias", "visible"]);
     await runtime.refreshCommands();
-    expect(runtime.view.commands.map((command) => command.name)).toEqual(["clear", "rewind", "reload", "name", "alias", "visible"]);
+    expect(runtime.view.commands.map((command) => command.name)).toEqual(["clear", "reload", "name", "alias", "visible"]);
     await expect(runtime.probePiIntegration()).resolves.toEqual({
       available: true,
       commandName: "frostpi.session-tree:1",
     });
-    expect(runtime.view.commands.map((command) => command.name)).toEqual(["clear", "rewind", "reload", "name", "alias", "visible"]);
+    expect(runtime.view.commands.map((command) => command.name)).toEqual(["clear", "reload", "name", "alias", "visible"]);
     expect(runtime.view.conversationItems).toContainEqual(
       expect.objectContaining({
         type: "branchControl",
@@ -1220,7 +1222,7 @@ function runtimeConfiguration(piExecutable: string, runtimeCompatibility: Runtim
     piArguments: [],
     startSessionOnOpen: true,
     streamingBehavior: "followUp" as const,
-    collapseTurnTrace: true, focusView: true,
+    collapseTurnTrace: true, collapseRunningTurnTrace: true,
     questionToolEnabled: false,
     maxImageBytes: 10 * 1024 * 1024,
     diagnosticsLevel: "info" as const,
