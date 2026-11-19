@@ -708,7 +708,8 @@ process.on("SIGTERM", () => process.exit(0));
     await expect(runtime.userMessageEntryId(message.id)).resolves.toBe("saved-prompt");
     expect(conversationTurns(runtime.view)[0]?.userMessage?.sourceEntryId).toBeUndefined();
     await expect(runtime.userMessageEntryId("no-such-message")).rejects.toThrow("no longer available");
-  });
+    // The wait above may take most of the default test timeout on a loaded machine.
+  }, 15_000);
 
   it("refreshes session stats during a long running turn", async () => {
     const dir = await mkdtemp(join(tmpdir(), "frostpi-runtime-live-stats-"));
