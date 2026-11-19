@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - An extension's message that arrives during a run of tool calls, such as a background process reporting that it finished, shows on its own again instead of folding into the step group, as before 0.17.6. That change was a guess at the split step groups below and did not fix them.
+- `@` file mentions no longer follow symbolic links by default. A link to a large directory outside the workspace, or a link loop, could make the search slow or fill it with duplicates. Turn `frostpi.composer.fileMentions.followSymlinks` on to follow them again.
 
 ### Fixed
 
