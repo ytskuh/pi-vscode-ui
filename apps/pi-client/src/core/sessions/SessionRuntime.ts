@@ -513,7 +513,7 @@ export class SessionRuntime {
       // question about it goes with it; an answer that still arrives finds no card.
       onCommitted?.();
       this.#setHistoryWindow(null);
-        this.#conversation.clearQueuedPrompts();
+      this.#conversation.clearQueuedPrompts();
       this.#viewState.resetForNewConversation(NEW_SESSION_TITLE);
       return await this.#loadNewConversation(api, previousModel, previousThinkingLevel, hadConversation);
     } finally {
