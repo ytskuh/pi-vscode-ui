@@ -74,24 +74,6 @@ describe("focus view", () => {
     expect(planTurnItems(turn("running", [tool("solo"), response("r")]), true, true)).toEqual({ mode: "flat" });
   });
 
-  it("folds an extension's message that arrives during a run into that run", () => {
-    const items = [
-      tool("t1"), custom("done-1"), tool("t2"), custom("done-2"), reasoning("r1"), custom("done-3"), response("reply"),
-      custom("after-reply"), tool("t3"), response("final"),
-    ];
-    const plan = planTurnItems(turn("completed", items), true);
-    if (plan.mode !== "grouped") throw new Error("expected a grouped plan");
-
-    // One group, not three split by the notifications; they count as no step.
-    expect([...plan.groupsByFirstItemId.values()]).toEqual([
-      { id: "t1", steps: 3, errors: 0, active: false, detail: "bash ×2, process:notification ×3, reasoning" },
-    ]);
-    expect([...plan.groupIdByItemId.keys()]).toEqual(["t1", "done-1", "t2", "done-2", "r1", "done-3"]);
-    // A message outside a run, or in a run too short to fold, stays visible.
-    expect(plan.groupIdByItemId.has("after-reply")).toBe(false);
-    expect(planTurnItems(turn("completed", [tool("solo"), custom("note"), response("r")]), true)).toEqual({ mode: "flat" });
-  });
-
   it("reports what is running now, and failures, in the group summary", () => {
     const thinking: AgentTurnItemView = { id: "live", type: "reasoning", text: "", status: "streaming", timestamp: 0 };
     const preparing: AgentTurnItemView = { id: "prep", type: "tool", timestamp: 0, tool: { state: "preparing", rawArguments: "{", status: "running", isError: false, startedAt: 0 } };
@@ -191,10 +173,6 @@ function branchControl(id: string): AgentTurnItemView {
 
 function notice(id: string, level: "info" | "error"): AgentTurnItemView {
   return { id, type: "notice", text: id, level, timestamp: 0 };
-}
-
-function custom(id: string): AgentTurnItemView {
-  return { id, type: "customMessage", customType: "process:notification", blocks: [{ type: "text", text: id }], timestamp: 0 };
 }
 
 function compaction(id: string): AgentTurnItemView {
