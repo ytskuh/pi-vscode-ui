@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.9] - 2026-11-19
+
 ### Changed
 
 - An extension's message that arrives during a run of tool calls, such as a background process reporting that it finished, shows on its own again instead of folding into the step group, as before 0.17.6. That change was a guess at the split step groups below and did not fix them.
