@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A reply in which a model ran tool calls fell apart into many separate turns once Pi saved it: each turn held one or two steps, so the step groups looked split, or a lone step showed unfolded. It showed when a tab was reopened, or when you came back to a tab after the reply finished. It happened with models that report a normal stop together with their tool calls, as Gemini does behind an OpenAI-compatible endpoint. Pi runs those calls and continues, and FrostPi now keeps them in the same turn.
 
+### Performance
+
+- Long sessions keep VS Code responsive while Pi works. Each update of a running reply sent the whole turn to the session's view again, every step and its output included, and the view rendered every step again; in a turn of 150 steps that was about 400 KB some 40 times a second. Now only the steps that changed are sent and rendered, about 2 KB per update. Measured on a 150-step turn with steps unfolded, an update went from about 32 ms to 6 ms of the view's time.
+- Switching to a session tab no longer rebuilds its whole conversation. A tab in the background is not updated while hidden, as before, and when you come back it receives only what changed meanwhile instead of the entire conversation. A session view whose session did not change no longer receives an update every time another session does.
+
 ## [0.17.8] - 2026-11-18
 
 ### Fixed
