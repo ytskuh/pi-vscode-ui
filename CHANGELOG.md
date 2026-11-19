@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - An extension's message that arrives during a run of tool calls, such as a background process reporting that it finished, shows on its own again instead of folding into the step group, as before 0.17.6. That change was a guess at the split step groups below and did not fix them.
 
+### Fixed
+
+- A reply in which a model ran tool calls fell apart into many separate turns once Pi saved it: each turn held one or two steps, so the step groups looked split, or a lone step showed unfolded. It showed when a tab was reopened, or when you came back to a tab after the reply finished. It happened with models that report a normal stop together with their tool calls, as Gemini does behind an OpenAI-compatible endpoint. Pi runs those calls and continues, and FrostPi now keeps them in the same turn.
+
 ## [0.17.8] - 2026-11-18
 
 ### Fixed
