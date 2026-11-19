@@ -161,14 +161,14 @@ A session can live in an editor tab instead of the sidebar. **FrostPi: New Sessi
 FrostPi answers a few slash commands itself. They never become a prompt, and they take precedence over a Pi extension command or prompt template with the same name.
 
 - `/compact [instructions]` runs Pi's own context compaction.
-- `/clear` starts a new conversation in the same session view. The model, thinking level and Pi process stay. The earlier conversation remains in Pi's session history, so **Resume session** can reopen it. Stop a running response first.
+- `/new` starts a new conversation in the same session view. The model, thinking level and Pi process stay. The earlier conversation remains in Pi's session history, so **Resume session** can reopen it. Stop a running response first.
 - `/name <name>` or `/alias <name>` renames the session. Without a name, FrostPi asks for one.
 - `/reload` reloads Pi's extensions, skills, prompt templates, themes and context files without restarting the session. Stop a running response first.
 - `/btw <question>` asks a side question about the conversation without adding it to the conversation. The answer appears in a card above the Composer and is never saved. It works while Pi is running a turn, uses the current model and counts as one more model request, and cannot use tools.
   - The request is made inside Pi through its model API for extensions, with Pi's model, credentials and provider settings. It follows Pi's `images.blockImages` setting.
   - It is not an agent turn. Other Pi extensions' `context`, `before_provider_request` and `before_provider_headers` hooks do not run for it. If you rely on such an extension to redact context or to add gateway headers, do not use `/btw`.
 
-`/clear`, `/reload` and `/btw` need Pi. With the `oh-my-pi` compatibility profile FrostPi does not offer them and passes such text to the runtime unchanged.
+`/new`, `/reload` and `/btw` need Pi. With the `oh-my-pi` compatibility profile FrostPi does not offer them and passes such text to the runtime unchanged.
 
 ### Folding long turns
 

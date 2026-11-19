@@ -25,7 +25,7 @@ describe("Host slash commands through the real Registry and child-process path",
     const fixture = await host();
     const sessionId = await fixture.startSession();
     expect(fixture.view(sessionId).commands.map(({ name, source }) => `${name}:${source}`)).toEqual([
-      "clear:frostpi", "reload:frostpi", "name:frostpi", "alias:frostpi", "btw:frostpi", "visible:extension",
+      "new:frostpi", "reload:frostpi", "name:frostpi", "alias:frostpi", "btw:frostpi", "visible:extension",
     ]);
   });
 
@@ -34,7 +34,7 @@ describe("Host slash commands through the real Registry and child-process path",
     const fixture = await host([], { adapters: false });
     const { view } = fixture;
     const sessionId = await fixture.startSession();
-    expect(view(sessionId).commands.map((command) => command.name)).toEqual(["clear", "name", "alias", "visible"]);
+    expect(view(sessionId).commands.map((command) => command.name)).toEqual(["new", "name", "alias", "visible"]);
 
     await fixture.converse(sessionId, "/btw is this mine?");
     await fixture.converse(sessionId, "/reload");
@@ -49,7 +49,7 @@ describe("Host slash commands through the real Registry and child-process path",
     const fixture = await host(["--adapters-not-loaded"]);
     const { view } = fixture;
     const sessionId = await fixture.startSession();
-    expect(view(sessionId).commands.map((command) => command.name)).toEqual(["clear", "name", "alias", "visible"]);
+    expect(view(sessionId).commands.map((command) => command.name)).toEqual(["new", "name", "alias", "visible"]);
 
     await fixture.converse(sessionId, "/btw is this mine?");
     await fixture.converse(sessionId, "/reload");
@@ -101,7 +101,7 @@ describe("Host slash commands through the real Registry and child-process path",
     });
   });
 
-  describe("/clear", () => {
+  describe("/new", () => {
     it("starts a new conversation under the same identity and keeps the model in use", async () => {
       const fixture = await host();
       const { registry, view } = fixture;
@@ -113,12 +113,12 @@ describe("Host slash commands through the real Registry and child-process path",
       const firstFile = view(sessionId).sessionFile;
       await fixture.waitFor(() => fixture.persistedSessions().some((record) => record.sessionFile === firstFile));
 
-      await registry.sendPrompt(sessionId, " /clear ", []);
+      await registry.sendPrompt(sessionId, " /new ", []);
 
       const cleared = view(sessionId);
       expect(registry.snapshot().sessions.map((session) => session.id)).toEqual([sessionId]);
       expect(userPrompts(cleared)).toEqual([]);
-      expect(notices(cleared)).toEqual([expect.stringContaining("Conversation cleared. The earlier conversation stays in Pi's session history")]);
+      expect(notices(cleared)).toEqual([expect.stringContaining("New conversation started. The earlier conversation stays in Pi's session history")]);
       expect(cleared).toMatchObject({
         title: "New session", status: "ready", historyStatus: "loaded", thinkingLevel: "high",
         model: { provider: "fake", id: "other" },
@@ -141,7 +141,7 @@ describe("Host slash commands through the real Registry and child-process path",
       const { registry } = fixture;
       const sessionId = await fixture.startSession();
       await fixture.converse(sessionId, "first");
-      await registry.sendPrompt(sessionId, "/clear", []);
+      await registry.sendPrompt(sessionId, "/new", []);
 
       const other = await fixture.startSession();
 
@@ -156,7 +156,7 @@ describe("Host slash commands through the real Registry and child-process path",
       await registry.sendPrompt(sessionId, "hold", []);
       await fixture.waitFor(() => view(sessionId).isStreaming);
 
-      await expect(registry.sendPrompt(sessionId, "/clear", [], "steer")).rejects.toThrow("Stop the current response before clearing the conversation.");
+      await expect(registry.sendPrompt(sessionId, "/new", [], "steer")).rejects.toThrow("Stop the current response before starting a new conversation.");
 
       expect(view(sessionId)).toMatchObject({ isStreaming: true, queuedSteers: [], queuedFollowUps: [] });
       expect(userPrompts(view(sessionId))).toEqual(["first", "hold"]);
@@ -171,7 +171,7 @@ describe("Host slash commands through the real Registry and child-process path",
       await fixture.converse(sessionId, "first");
       const file = view(sessionId).sessionFile;
 
-      await expect(registry.clearConversation(sessionId)).resolves.toEqual({ cancelled: true });
+      await expect(registry.startNewConversation(sessionId)).resolves.toEqual({ cancelled: true });
 
       expect(userPrompts(view(sessionId))).toEqual(["first"]);
       expect(view(sessionId).sessionFile).toBe(file);
@@ -189,14 +189,14 @@ describe("Host slash commands through the real Registry and child-process path",
       await fixture.converse(other, "first in B");
       const file = view(cleared).sessionFile;
 
-      const clearing = registry.clearConversation(cleared);
+      const clearing = registry.startNewConversation(cleared);
       await new Promise((resolve) => setImmediate(resolve));
 
       // Requests that would land around the switch wait for it.
-      await expect(registry.setModel(cleared, "fake", "other")).rejects.toThrow("Wait for the conversation to finish clearing.");
-      await expect(registry.sendPrompt(cleared, "too early", [])).rejects.toThrow("Wait for the conversation to finish clearing.");
-      await expect(registry.sendPrompt(cleared, "/btw too early", [])).rejects.toThrow("Wait for the conversation to finish clearing.");
-      await expect(registry.clearConversation(cleared)).rejects.toThrow("Finish the current session-tree interaction first.");
+      await expect(registry.setModel(cleared, "fake", "other")).rejects.toThrow("Wait for the new conversation to finish starting.");
+      await expect(registry.sendPrompt(cleared, "too early", [])).rejects.toThrow("Wait for the new conversation to finish starting.");
+      await expect(registry.sendPrompt(cleared, "/btw too early", [])).rejects.toThrow("Wait for the new conversation to finish starting.");
+      await expect(registry.startNewConversation(cleared)).rejects.toThrow("Finish the current session-tree interaction first.");
       // An unrelated save in that window still describes the Session as it is.
       await registry.rename(other, "Renamed B");
       await registry.flushPersistence();
@@ -218,7 +218,7 @@ describe("Host slash commands through the real Registry and child-process path",
       const sessionId = await fixture.startSession();
       await fixture.converse(sessionId, "first");
 
-      const clearing = registry.sendPrompt(sessionId, "/clear", []);
+      const clearing = registry.sendPrompt(sessionId, "/new", []);
       await new Promise((resolve) => setImmediate(resolve));
       expect(userPrompts(view(sessionId))).toEqual(["first"]);
       await registry.refreshCommands(sessionId);
@@ -242,7 +242,7 @@ describe("Host slash commands through the real Registry and child-process path",
       await registry.flushPersistence();
       expect(fixture.persistedSessions()).toEqual([expect.objectContaining({ id: sessionId, sessionFile: earlierFile })]);
 
-      await expect(registry.sendPrompt(sessionId, "/clear", [])).rejects.toThrow("transient get_state failure");
+      await expect(registry.sendPrompt(sessionId, "/new", [])).rejects.toThrow("transient get_state failure");
 
       expect(view(sessionId)).toMatchObject({ title: "New session", historyStatus: "failed" });
       expect(userPrompts(view(sessionId))).toEqual([]);
@@ -252,7 +252,7 @@ describe("Host slash commands through the real Registry and child-process path",
       await registry.rename(bystander, "Any later save");
       await registry.flushPersistence();
       expect(fixture.persistedSessions().map((record) => record.id)).toEqual([bystander]);
-      // ...and a restart does not reopen what the user cleared.
+      // ...and a restart does not reopen the conversation the user left.
       await registry.retrySession(sessionId);
       await fixture.waitFor(() => view(sessionId).status === "ready" && view(sessionId).sessionFile !== undefined);
       expect(view(sessionId).sessionFile).not.toBe(earlierFile);
@@ -267,7 +267,7 @@ describe("Host slash commands through the real Registry and child-process path",
       await registry.sendPrompt(sessionId, "/btw never-answer", []);
       expect(view(sessionId).sideQuestion).toMatchObject({ status: "pending" });
 
-      await registry.sendPrompt(sessionId, "/clear", []);
+      await registry.sendPrompt(sessionId, "/new", []);
 
       expect(view(sessionId).sideQuestion).toBeUndefined();
       expect(userPrompts(view(sessionId))).toEqual([]);
@@ -280,14 +280,14 @@ describe("Host slash commands through the real Registry and child-process path",
       await fixture.converse(sessionId, "unsaved");
 
       fixture.answerWarningDialogs(undefined);
-      await registry.sendPrompt(sessionId, "/clear", []);
-      expect(fixture.warningDialogs).toEqual([expect.stringContaining("permanently discard its conversation")]);
+      await registry.sendPrompt(sessionId, "/new", []);
+      expect(fixture.warningDialogs).toEqual([expect.stringContaining("permanently discard the current one")]);
       expect(userPrompts(view(sessionId))).toEqual(["unsaved"]);
 
       fixture.answerWarningDialogs("first-button");
-      await registry.sendPrompt(sessionId, "/clear", []);
+      await registry.sendPrompt(sessionId, "/new", []);
       expect(userPrompts(view(sessionId))).toEqual([]);
-      expect(notices(view(sessionId))).toEqual(["Conversation cleared."]);
+      expect(notices(view(sessionId))).toEqual(["New conversation started."]);
       expect(view(sessionId).isEphemeral).toBe(true);
     });
 
@@ -295,12 +295,12 @@ describe("Host slash commands through the real Registry and child-process path",
       const fixture = await host();
       const { registry, view } = fixture;
       const sessionId = await fixture.startSession();
-      await fixture.converse(sessionId, "/clear the cache directory");
-      expect(userPrompts(view(sessionId))).toEqual(["/clear the cache directory"]);
+      await fixture.converse(sessionId, "/new feature branch");
+      expect(userPrompts(view(sessionId))).toEqual(["/new feature branch"]);
 
       const image = { id: "i", name: "i.png", mimeType: "image/png" as const, data: "AAAA", size: 3 };
-      await expect(registry.sendPrompt(sessionId, "/clear", [image])).rejects.toThrow("/clear does not support image attachments.");
-      expect(userPrompts(view(sessionId))).toEqual(["/clear the cache directory"]);
+      await expect(registry.sendPrompt(sessionId, "/new", [image])).rejects.toThrow("/new does not support image attachments.");
+      expect(userPrompts(view(sessionId))).toEqual(["/new feature branch"]);
     });
   });
 

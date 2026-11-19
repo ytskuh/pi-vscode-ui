@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `/clear` is now `/new`, the name Pi's own terminal uses for the same `new_session` request, as in the upstream pull request. `/clear` is no longer intercepted and reaches Pi as typed.
 - A finished turn again folds its tools, reasoning and interim replies into one **Worked** summary above the final reply, with the **Reply** line that toggles it from the bottom. Inside an opened summary each run of steps stays folded. Per-run folding (Focus View) now applies to running turns only, under the renamed setting `frostpi.conversation.collapseRunningTurnTrace` and **FrostPi: Toggle Running-Turn Collapse (Focus View)**; `frostpi.conversation.focusView` is gone, so set the new key again if you had changed it.
 - The session list's stop button is now one **Stop Pi process** / **Restart Pi process** button that switches in place. **Delete session** left the session-list rows and stays in the `…` menu. The `…` menu's process entries use the same names, and the command is **FrostPi: Stop Pi Process**. The Composer's stop button is labelled **Stop response**.
 - A session file larger than 8 MiB opens on a recent preview of its current branch from the latest prompt on, instead of from the last compaction in file order. Branch here, Switch branch and Fork load the full history first. When no prompt of the current branch lies within the last 8 MiB, history waits for **Load full history** and the conversation says why, instead of loading in full on its own.
