@@ -697,7 +697,8 @@ process.on("SIGTERM", () => process.exit(0));
 
     await runtime.start();
     await runtime.sendPrompt("fork me", []);
-    await waitFor(() => runtime.view.isStreaming && conversationTurns(runtime.view)[0]?.userMessage?.timestamp === 4242);
+    // A spawned fake Pi can be slow to answer while the whole suite runs in parallel.
+    await waitFor(() => runtime.view.isStreaming && conversationTurns(runtime.view)[0]?.userMessage?.timestamp === 4242, 5_000);
     const message = conversationTurns(runtime.view)[0]!.userMessage!;
     // The conversation learns the entry only when the turn ends.
     expect(message.sourceEntryId).toBeUndefined();
