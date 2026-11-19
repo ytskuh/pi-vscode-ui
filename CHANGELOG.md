@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The session list's stop button is now one **Stop Pi process** / **Restart Pi process** button that switches in place. **Delete session** left the session-list rows and stays in the `…` menu. The `…` menu's process entries use the same names, and the command is **FrostPi: Stop Pi Process**. The Composer's stop button is labelled **Stop response**.
 - A session file larger than 8 MiB opens on a recent preview of its current branch from the latest prompt on, instead of from the last compaction in file order. Branch here, Switch branch and Fork load the full history first. When no prompt of the current branch lies within the last 8 MiB, history waits for **Load full history** and the conversation says why, instead of loading in full on its own.
 
+### Fixed
+
+- A turn that Pi started right after the previous one settled, such as a queued follow-up, could show as finished while it was still running, and a Fork chosen then could end its reply. A state read before that turn started is no longer applied.
+
 ### Removed
 
 - `/rewind`. Use **Branch here** on the prompt in the conversation, which does the same.
