@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A fork made from a session tab opens in that tab's editor group, also if you moved to another group while it started.
 - This fork is now rebased on upstream FrostPi `main` (d459535), which merged this fork's session pull request (#13) with the maintainer's changes. Beyond what the fork already had, that brings two fixes: names that Pi gives a session show as they change, and on startup a session still labelled **New session** takes the name Pi saved for it; and with `frostpi.session.closeWithEditorTab` on, closing a session tab with its × now closes the session too, where Pi used to keep running.
 - Session tabs are told apart by numbered Webview types, as upstream now does. Up to 32 open session tabs come back after VS Code restarts; a 33rd tab and beyond do not.
+- With `frostpi.conversation.collapseTurnTrace` off and Focus View on, a finished turn keeps its tool calls and reasoning folded per run instead of unfolding them all when it ends.
 
 ### Removed
 
