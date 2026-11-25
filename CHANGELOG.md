@@ -6,26 +6,153 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Changed
 
-- Start new sessions, including temporary ones, directly in VS Code editor tabs without changing the sidebar selection. Opt in to closing the session with its tab via `frostpi.session.closeWithEditorTab`.
-- Rename a session from its editor tab or with `/name` and `/alias` in the Composer.
-- Start a new conversation in place with `/new`, keeping saved history available to resume. `/reload` reloads Pi extensions, skills, and other resources without restarting Pi.
-- Fork a saved message while Pi is still responding. The original reply keeps running, and the fork can be canceled before it joins the session list.
-- Stop and restart Pi without closing the session or losing its history. **Stop Response** still cancels only the current reply.
-- Delete a saved session without deleting its forks. VS Code tries the trash first; Desktop deletes the file permanently after confirmation.
-- Focus View folds consecutive tool calls and reasoning while a turn runs, leaving replies visible. It is on by default and can be turned off independently of finished-turn folding.
+- Fork no longer stops the session you fork from. When that session was idle, the fork took over its Pi process and left it stopped, to restart when next used. Every fork now runs in a Pi process of its own, as a fork during a reply already did, and the session you forked from stays running and usable while the fork starts. The fork joins the session list only once Pi has written its own file, so nothing can close or delete it while it starts; until then the message you forked from offers **Cancel Fork**. A question an extension asks about the fork has nowhere to appear meanwhile; cancel the fork to stop waiting.
+- A fork keeps the model and thinking level of the session it came from. Pi started it on those saved at the message you forked from, or on its defaults.
+- A fork made from a session tab opens in that tab's editor group, also if you moved to another group while it started.
+- This fork is now rebased on upstream FrostPi `main` (d459535), which merged this fork's session pull request (#13) with the maintainer's changes. Beyond what the fork already had, that brings two fixes: names that Pi gives a session show as they change, and on startup a session still labelled **New session** takes the name Pi saved for it; and with `frostpi.session.closeWithEditorTab` on, closing a session tab with its × now closes the session too, where Pi used to keep running.
+- Session tabs are told apart by numbered Webview types, as upstream now does. Up to 32 open session tabs come back after VS Code restarts; a 33rd tab and beyond do not.
+
+### Removed
+
+- The 0.17.9 fix that kept tool calls ending with a normal stop reason, as Gemini reports them behind an OpenAI-compatible endpoint, in one turn. It is no longer needed.
+
+## [0.17.10] - 2026-11-19
 
 ### Changed
 
-- Open a finished turn's **Worked** summary to read interim replies without expanding every tool call. Changes to turn folding settings now apply immediately.
+- `/clear` is now `/new`, the name Pi's own terminal uses for the same `new_session` request, as in the upstream pull request. `/clear` is no longer intercepted and reaches Pi as typed.
+- A finished turn again folds its tools, reasoning and interim replies into one **Worked** summary above the final reply, with the **Reply** line that toggles it from the bottom. Inside an opened summary each run of steps stays folded. Per-run folding (Focus View) now applies to running turns only, under the renamed setting `frostpi.conversation.collapseRunningTurnTrace` and **FrostPi: Toggle Running-Turn Collapse (Focus View)**; `frostpi.conversation.focusView` is gone, so set the new key again if you had changed it.
+- The session list's stop button is now one **Stop Pi process** / **Restart Pi process** button that switches in place. **Delete session** left the session-list rows and stays in the `…` menu. The `…` menu's process entries use the same names, and the command is **FrostPi: Stop Pi Process**. The Composer's stop button is labelled **Stop response**.
+- A session file larger than 8 MiB opens on a recent preview of its current branch from the latest prompt on, instead of from the last compaction in file order. Branch here, Switch branch and Fork load the full history first. When no prompt of the current branch lies within the last 8 MiB, history waits for **Load full history** and the conversation says why, instead of loading in full on its own.
 
 ### Fixed
 
-- Open sessions in editor tabs directly from the session list, even if they have not been shown in the sidebar.
-- Wait for history to load before sending a prompt that restarts a stopped or failed session.
-- Resume Pi sessions with their saved model and thinking level instead of overriding them with defaults from `frostpi.pi.arguments`.
-- Sync names set by Pi as they change. On startup, recover saved names for sessions still labeled `New session`.
+- A turn that Pi started right after the previous one settled, such as a queued follow-up, could show as finished while it was still running, and a Fork chosen then could end its reply. A state read before that turn started is no longer applied.
+
+### Removed
+
+- `/rewind`. Use **Branch here** on the prompt in the conversation, which does the same.
+
+## [0.17.9] - 2026-11-19
+
+### Changed
+
+- An extension's message that arrives during a run of tool calls, such as a background process reporting that it finished, shows on its own again instead of folding into the step group, as before 0.17.6. That change was a guess at the split step groups below and did not fix them.
+- `@` file mentions no longer follow symbolic links by default. A link to a large directory outside the workspace, or a link loop, could make the search slow or fill it with duplicates. Turn `frostpi.composer.fileMentions.followSymlinks` on to follow them again.
+
+### Fixed
+
+- A reply in which a model ran tool calls fell apart into many separate turns once Pi saved it: each turn held one or two steps, so the step groups looked split, or a lone step showed unfolded. It showed when a tab was reopened, or when you came back to a tab after the reply finished. It happened with models that report a normal stop together with their tool calls, as Gemini does behind an OpenAI-compatible endpoint. Pi runs those calls and continues, and FrostPi now keeps them in the same turn.
+
+### Performance
+
+- Long sessions keep VS Code responsive while Pi works. Each update of a running reply sent the whole turn to the session's view again, every step and its output included, and the view rendered every step again; in a turn of 150 steps that was about 400 KB some 40 times a second. Now only the steps that changed are sent and rendered, about 2 KB per update. Measured on a 150-step turn with steps unfolded, an update went from about 32 ms to 6 ms of the view's time.
+- Switching to a session tab no longer rebuilds its whole conversation. A tab in the background is not updated while hidden, as before, and when you come back it receives only what changed meanwhile instead of the entire conversation. A session view whose session did not change no longer receives an update every time another session does.
+
+## [0.17.8] - 2026-11-18
+
+### Fixed
+
+- `@` file mentions find files whose name contains what you type in very large workspaces too. FrostPi searched the workspace again with `fd` for every keystroke, and in a large tree that search could run out of time before reaching the file, or stop at its result cap. It now lists the workspace once and matches the list as you type; the list is refreshed in the background every 20 seconds while you use `@`. The first `@` in a session still searches the old way while the list is built.
+
+## [0.17.7] - 2026-11-18
+
+### Added
+
+- Session editor tabs come back after VS Code restarts, in the tab groups and order they had. A tab's session starts when the tab is first shown. A temporary session's tab does not come back, since nothing of that session was saved.
+- Fork the message you just sent while Pi is still replying to it. The fork keeps the conversation before that message and puts the message back in the new session's Composer, so the reply in progress is not part of it. Before, **Fork** appeared on that message only once the reply had finished.
+
+### Changed
+
+- Includes upstream FrostPi 0.16.7, listed under that version below. It adds terminal-style cards for PowerShell tool calls, AVIF and BMP images in the conversation, and fixes for copying selected text with `Ctrl+C` and for hidden action buttons that caught clicks. Its security fixes are this fork's own from 0.17.0.
+
+## [0.17.6] - 2026-11-16
+
+### Fixed
+
+- A turn in which an extension posted messages while Pi worked, such as a background process reporting that it finished, folded into many small step groups, one between each pair of messages. Such a message now folds into the group it arrived in, and the group's summary names it. A message that arrives outside a group, or beside a single step, still shows on its own.
+
+## [0.17.5] - 2026-11-15
+
+### Added
+
+- You can keep typing while Pi compacts the context. A prompt sent during compaction waits as a pending Steer or Queue message and goes to Pi when compaction ends, as in Pi's terminal. It used to be refused, and the Composer was disabled. **Restore all** takes messages waiting for a `/compact` back into the Composer, images included, while compaction still runs. During Pi's automatic compaction it stays unavailable, because Pi may already have picked up a queued message. Stopping the compaction drops waiting messages, as Stop does with a queue. FrostPi's own commands such as `/clear` still wait for compaction to finish.
+- Stop a session without closing it: its Pi process ends and it stays in the list, ready to start again when you select it, send a prompt or choose **Start session**. Use the stop button on its row in the session list, **Stop session** in the `…` menu, or **FrostPi: Stop Session**, which is also in a session tab's title bar menu.
+- Delete a session: **Delete session** stops it and removes its Pi session file, to the trash where possible, after confirmation. It is in the same places, with a trash icon in the session list, and as **FrostPi: Delete Session**. Forks of the session keep their own files.
+- Right-click a link in a message to copy it: **Copy Link Address** for a web link, **Copy Path** for a file link, which copies the full path with its line. VS Code's own **Copy** only copies selected text, so it copied nothing from a link.
+- The page shown when no session is open offers **Temporary session**, a conversation that is never saved, next to **New session** and **Resume session**.
+- A temporary session can start directly in an editor tab: from the crossed-eye button beside **New session in editor tab** in the sidebar's `+` menu, from the new crossed-eye button in a session tab, by holding Alt while clicking the `+` in the editor title bar, from that title bar's `…` menu, or with **FrostPi: New Temporary Session in Editor Tab**. **FrostPi: New Temporary Session** starts one in the sidebar.
+
+### Fixed
+
+- Clicking a web link in a message opened it in the browser and then also showed VS Code's dialog asking whether to open, copy or cancel it. The link now just opens.
+- A prompt sent to a session that had stopped or failed could be refused with "Wait for conversation history to finish loading" while FrostPi started it again. The prompt now waits for the history and is sent.
+
+### Changed
+
+- **FrostPi: Stop Active Session** is now called **FrostPi: Stop Response**. It stops the running reply, as before; **FrostPi: Stop Session** is the new command that ends the Pi process.
+- The sidebar's `+` menu is one flat list: **New session**, **New session in editor tab**, **New session with arguments…** and **Resume session**. The two new-session entries each end in a crossed-eye button that starts the temporary variant. The arrow that expanded more ways to start is gone.
+- The badge beside a temporary session's title reads **Temporary**. It was in Chinese (临时).
+- Includes upstream FrostPi 0.16.6, listed under that version below. In VS Code that adds the link target preview and one **Reasoning** entry for adjacent thinking blocks.
+- Blank reasoning blocks are now skipped by upstream's fix from 0.16.6, which replaces this fork's own from 0.17.2. One difference: reasoning a model keeps private no longer shows a **Thinking** row while the model reasons. The running turn's timer still shows that it is working.
+
+## [0.17.4] - 2026-11-14
+
+### Fixed
+
+- `@` file mentions find files whose name contains what you type, also in large workspaces. The fuzzy search used to stop at its first 500 matches, which could all be unrelated paths, so typing part of a file's name could miss it.
+
+## [0.17.2] - 2026-11-13
+
+### Fixed
+
+- Reasoning a model keeps private no longer leaves an empty **Reasoning** row. OpenAI models, for example, often reason without a summary. The row says **Thinking** while the model reasons and goes away once it moves on, as in Pi's terminal.
+
+## [0.17.1] - 2026-11-13
+
+### Added
+
+- The sidebar's session has a rename button next to its title, and double-clicking the title renames it too.
+- `/name <name>` and `/alias <name>` rename the session from the Composer, also while Pi is running a turn. Without a name they ask for one.
+- `/reload` reloads Pi's extensions, skills, prompt templates, themes and context files in the running session, like `/reload` in Pi's terminal UI. In RPC mode Pi used to receive it as an ordinary prompt.
+- New setting `frostpi.session.closeWithEditorTab`: closing a session's editor tab also closes the session. Off by default.
+
+### Fixed
+
+- Opening a session in an editor tab from the session list failed with "The Webview action does not target the Session displayed by this surface" until that session had been shown in the sidebar. A restored session opened this way now also starts and loads its history.
+- A model set in `frostpi.pi.arguments` (`--model`, `--provider`, `--thinking`) applies to new conversations only. Pi used to apply it to every resumed session too, replacing the model that session was using.
+- A reasoning row no longer looks empty after the model finishes thinking: it shows one line of its content beside its title, and an opened reasoning row stays open when the next step folds it into a group.
+
+### Changed
+
+- A finished turn no longer collapses into one **Worked** summary. Each run of tool calls and reasoning folds into its own row, and replies between runs stay visible. `frostpi.conversation.collapseTurnTrace` controls this for finished turns.
+- A long session opens on its part since the last compaction, or on its recent prompts when it has none, with **Load full history** to see everything. Sessions larger than 8 MiB used to open with no history at all.
+- Fork works while a reply is running. FrostPi forks in a separate Pi process, so the reply keeps going.
+
+## [0.17.0] - 2026-11-12
+
+### Added
+
+- Start a session directly in an editor tab with **FrostPi: New Session in Editor Tab**, the sidebar's New session menu, or the `+` button of a session tab. From a session tab the new one opens in the same tab group and working directory. The sidebar keeps its own selection.
+- Rename a session from its editor tab: click the title in the tab's new header, or run **FrostPi: Rename Session**. This also works while Pi is running a turn. Renaming used to be possible only from the sidebar.
+- `/clear` starts a new conversation in the same session view and keeps the model, thinking level and Pi process. The earlier conversation stays in Pi's session history for **Resume session**.
+- `/rewind` lists earlier prompts and returns the conversation to just before the one you pick, with that prompt back in the Composer. It uses Pi's session tree, so the path you left remains available; files on disk are not restored.
+- `/btw <question>` asks a side question about the current conversation without adding it to the conversation, also while Pi is running a turn. The answer appears in a dismissible card and is never saved. It follows Pi's `images.blockImages` setting; other Pi extensions' request hooks do not run for it.
+- Focus view, on by default: each run of tool calls and reasoning folds into one expandable row while a turn is running, and replies stay visible. Switch with **FrostPi: Toggle Focus View** or `frostpi.conversation.focusView`.
+
+### Changed
+
+- `frostpi.conversation.collapseTurnTrace` now applies as soon as it changes instead of at the next session start.
+
+### Security
+
+- Update the rendering libraries to releases that fix published advisories: Mermaid 11.16.1 (a crafted diagram could change shared JavaScript object defaults or hang rendering), markdown-it 14.3.3 (a malformed link reference could freeze the chat for seconds), DOMPurify 3.4.17 and KaTeX 0.18.2.
+- Stop Mermaid diagrams from contacting remote servers. A diagram could previously load remote images or style-sheet resources while it rendered, without `Load image`, which let message content report to a server of its choice. The Webview no longer has permission to load anything remote; `Load image` now has the Extension Host fetch that one image, over HTTPS only, through the configured FrostPi proxy and within the attachment size limit.
+- Keep `/editor` drafts private on shared machines: the temporary draft now lives in its own owner-only directory instead of a world-readable file in the system temporary directory, and is removed together with it.
+- Leave Pi's stderr out of exported diagnostics. The export now states only how much was captured, since stderr can contain prompts or credentials in forms no redaction recognizes; the session's error display and the FrostPi output channel still show it. Redaction of the remaining text also covers JSON fields, headers, command-line flags, URL query secrets, private keys and common provider token formats.
+- On Windows, refuse Markdown image paths that name a network share or device (`\\server\share`, `file://server/…`), which were opened automatically and could send the user's Windows credentials to a server chosen by message content.
 
 ## [0.16.7] - 2026-11-16
 
