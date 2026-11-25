@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.12] - 2026-11-25
+
 ### Changed
 
 - Rebased on upstream FrostPi 0.17.0 (6a88072), which merged this fork's pull requests #24 and #34, already in this fork. New beyond 0.17.11: a fork is provisional, like a new session, so it leaves the session list when FrostPi restarts unless you have sent a message in it or renamed it; and **Stop Pi process** warns that queued messages will be discarded.
