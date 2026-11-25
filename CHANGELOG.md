@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Session tabs are told apart by numbered Webview types, as upstream now does. Up to 32 open session tabs come back after VS Code restarts; a 33rd tab and beyond do not.
 - With `frostpi.conversation.collapseTurnTrace` off and Focus View on, a finished turn keeps its tool calls and reasoning folded per run instead of unfolding them all when it ends.
 
+### Fixed
+
+- The session list stays with Pi's session files on the remote machine over Remote SSH, WSL or a dev container. It was saved on the computer that opened the remote folder, so another computer showed a different list. The list kept in VS Code's workspace state is carried over on the first save.
+
 ### Removed
 
 - The 0.17.9 fix that kept tool calls ending with a normal stop reason, as Gemini reports them behind an OpenAI-compatible endpoint, in one turn. It is no longer needed.
