@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.11] - 2026-11-25
+
 ### Changed
 
 - Fork no longer stops the session you fork from. When that session was idle, the fork took over its Pi process and left it stopped, to restart when next used. Every fork now runs in a Pi process of its own, as a fork during a reply already did, and the session you forked from stays running and usable while the fork starts. The fork joins the session list only once Pi has written its own file, so nothing can close or delete it while it starts; until then the message you forked from offers **Cancel Fork**. A question an extension asks about the fork has nowhere to appear meanwhile; cancel the fork to stop waiting.
