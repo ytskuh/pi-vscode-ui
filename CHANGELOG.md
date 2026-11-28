@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.13] - 2026-11-27
+
 ### Fixed
 
 - A message sent during `/compact` is no longer lost when an extension message, such as a background process notice, starts a turn before compaction ends. The waiting message showed as sent in that turn, though Pi never received it, and was not sent afterward. It now stays pending and joins that turn, or starts its own, when compaction ends.
